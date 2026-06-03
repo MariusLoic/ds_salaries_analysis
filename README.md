@@ -89,3 +89,11 @@ Le script produit **5 graphiques**  :
 ---
 
 *Dataset source : [ds_salaries sur Kaggle](https://www.kaggle.com/datasets/ruchi798/data-science-job-salaries)*
+
+
+# Auteur
+
+**Marius Loïc**
+- GitHub : [MariusLoic](https://github.com/MariusLoic)
+- Certifications : Data Engineering Associate | Data Analyst Associate
+- ngninmeum@gmail.com
