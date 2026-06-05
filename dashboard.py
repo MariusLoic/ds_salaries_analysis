@@ -78,7 +78,7 @@ ax5.set_xlabel("Salaire moyen (USD)")
 st.pyplot(fig5)
 
 # Graphique 6 : Evolution des salaires
-st.subheader("📈 Evolution du salaire moyen (2020-2022)")
+st.subheader(" Evolution du salaire moyen (2020-2022)")
 evolution = df.groupby('work_year')['salary_in_usd'].mean()
 fig6, ax6 = plt.subplots()
 ax6.plot(evolution.index, evolution.values, marker='o', color='royalblue', linewidth=2)
@@ -94,7 +94,7 @@ st.pyplot(fig6)
 import plotly.express as px
 import pycountry
 
-st.subheader("🗺️ Carte des recrutements par pays")
+st.subheader(" Carte des recrutements par pays")
 
 def convert_alpha2_to_alpha3(code):
     try:
@@ -122,8 +122,8 @@ fig_carte = px.choropleth(
 st.plotly_chart(fig_carte, use_container_width=True)
 
 # Prédicteur de salaire avec Machine Learning
-st.subheader("🤖 Prédiction de salaire")
-st.caption("📌 Modèle Machine Learning entraîné sur les données 2020-2022. Plus l'année est lointaine, moins la prédiction est précise.")
+st.subheader(" Prédiction de salaire")
+st.caption(" Modèle Machine Learning entraîné sur les données 2020-2022. Plus l'année est lointaine, moins la prédiction est précise.")
 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import LabelEncoder
@@ -178,14 +178,14 @@ try:
         ]
         if len(filtre_reel) > 0:
             salaire_reel = filtre_reel['salary_in_usd'].mean()
-            st.success(f"💰 Salaire réel {annee_pred} : **${salaire_reel:,.0f} / an**")
-            st.info(f"✅ Données réelles — basé sur {len(filtre_reel)} offre(s).")
+            st.success(f" Salaire réel {annee_pred} : **${salaire_reel:,.0f} / an**")
+            st.info(f" Données réelles — basé sur {len(filtre_reel)} offre(s).")
         else:
             st.warning(f"⚠️ Pas de données réelles pour cette combinaison en {annee_pred}.")
     else:
         # Prédiction ML pour 2023-2030
         salaire_predit = model.predict([[job_enc, exp_enc, loc_enc, annee_pred]])[0]
-        st.success(f"💰 Salaire prédit pour {annee_pred} : **${salaire_predit:,.0f} / an**")
+        st.success(f" Salaire prédit pour {annee_pred} : **${salaire_predit:,.0f} / an**")
         if annee_pred <= 2024:
             st.info("⚠️ Projection proche — assez fiable.")
         elif annee_pred <= 2027:
@@ -197,7 +197,7 @@ except:
     st.error("❌ Combinaison non disponible dans les données.")
 
 # Comparaison Afrique vs Monde
-st.subheader("🌍 Afrique vs Monde")
+st.subheader(" Afrique vs Monde")
 
 pays_afrique = ['NG', 'EG', 'KE', 'ZA', 'TN', 'DZ', 'CM', 'GH', 'SN']
 
@@ -205,8 +205,8 @@ sal_afrique = df[df['company_location'].isin(pays_afrique)]['salary_in_usd'].mea
 sal_monde = df[~df['company_location'].isin(pays_afrique)]['salary_in_usd'].mean()
 
 col1, col2 = st.columns(2)
-col1.metric("💰 Salaire moyen Afrique", f"${sal_afrique:,.0f}" if not pd.isna(sal_afrique) else "Pas de données")
-col2.metric("💰 Salaire moyen Monde", f"${sal_monde:,.0f}")
+col1.metric(" Salaire moyen Afrique", f"${sal_afrique:,.0f}" if not pd.isna(sal_afrique) else "Pas de données")
+col2.metric(" Salaire moyen Monde", f"${sal_monde:,.0f}")
 
 offres_afrique = len(df[df['company_location'].isin(pays_afrique)])
 offres_monde = len(df[~df['company_location'].isin(pays_afrique)])
@@ -218,7 +218,7 @@ ax7.set_title("Nombre d'offres : Afrique vs Monde")
 st.pyplot(fig7)
 
 # Tableau des données
-st.subheader("📋 Données brutes")
+st.subheader(" Données brutes")
 if st.checkbox("📋 Cliquez ici pour afficher les données brutes"):
    st.dataframe(df.reset_index(drop=True), height="content")
 
