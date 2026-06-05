@@ -7,7 +7,11 @@ import seaborn as sns
 st.set_page_config(page_title="Analyse Salaires Data Science", layout="wide")
 
 # Titre
-st.title("📊 Analyse des Salaires en Data Science")
+col_logo, col_titre = st.columns([1, 4])
+with col_logo:
+    st.image("logo.jpeg", width=100)
+with col_titre:
+    st.title(" Analyse des Salaires en Data Science")
 st.markdown("**Auteur : Marius** | Certifié Associate Data Analyst & Associate Data Engineer | ngninmeum@gmail.com | [LinkedIn](https://www.linkedin.com/in/marius-ngninmeu-35891a258)")
 
 # Chargement des données
