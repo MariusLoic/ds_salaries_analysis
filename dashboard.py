@@ -160,6 +160,28 @@ else:
         st.info(f"Basé sur {nb_offres} offre(s) similaire(s) dans le monde")
     else:
         st.error("❌ Aucune donnée disponible pour cette combinaison.")
+
+# Comparaison Afrique vs Monde
+st.subheader("🌍 Afrique vs Monde")
+
+pays_afrique = ['NG', 'EG', 'KE', 'ZA', 'TN', 'DZ', 'CM', 'GH', 'SN']
+
+sal_afrique = df[df['company_location'].isin(pays_afrique)]['salary_in_usd'].mean()
+sal_monde = df[~df['company_location'].isin(pays_afrique)]['salary_in_usd'].mean()
+
+col1, col2 = st.columns(2)
+col1.metric("💰 Salaire moyen Afrique", f"${sal_afrique:,.0f}" if not pd.isna(sal_afrique) else "Pas de données")
+col2.metric("💰 Salaire moyen Monde", f"${sal_monde:,.0f}")
+
+offres_afrique = len(df[df['company_location'].isin(pays_afrique)])
+offres_monde = len(df[~df['company_location'].isin(pays_afrique)])
+
+fig7, ax7 = plt.subplots()
+ax7.bar(['Afrique', 'Reste du Monde'], [offres_afrique, offres_monde], color=['#FF6B35', '#4ECDC4'])
+ax7.set_ylabel("Nombre d'offres")
+ax7.set_title("Nombre d'offres : Afrique vs Monde")
+st.pyplot(fig7)
+
 # Tableau des données
 st.subheader("📋 Données brutes")
 if st.checkbox("📋 Cliquez ici pour afficher les données brutes"):
