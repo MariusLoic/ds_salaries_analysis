@@ -32,6 +32,19 @@ taille_choix = st.sidebar.multiselect("Taille entreprise", taille_options, defau
 taille_codes = [k for k, v in taille_labels.items() if v in taille_choix]
 df = df[df['company_size'].isin(taille_codes)]
 
+# Filtre salaire
+st.sidebar.markdown("---")
+sal_min = int(df['salary_in_usd'].min())
+sal_max = int(df['salary_in_usd'].max())
+salaire_range = st.sidebar.slider(
+    "Fourchette de salaire (USD)",
+    min_value=sal_min,
+    max_value=sal_max,
+    value=(sal_min, sal_max),
+    step=1000
+)
+df = df[(df['salary_in_usd'] >= salaire_range[0]) & (df['salary_in_usd'] <= salaire_range[1])]
+
 # KPIs
 col1, col2, col3 = st.columns(3)
 col1.metric("Total offres", len(df))
