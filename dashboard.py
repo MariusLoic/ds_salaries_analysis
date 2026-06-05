@@ -90,6 +90,76 @@ for x, y in zip(evolution.index, evolution.values):
     ax6.annotate(f"${y:,.0f}", (x, y), textcoords="offset points", xytext=(15,10), ha='left')
 st.pyplot(fig6)
 
+# Carte du monde
+import plotly.express as px
+import pycountry
+
+st.subheader("🗺️ Carte des recrutements par pays")
+
+def convert_alpha2_to_alpha3(code):
+    try:
+        return pycountry.countries.get(alpha_2=code).alpha_3
+    except:
+        return None
+
+carte_data = df.groupby('company_location').agg(
+    offres=('job_title', 'count'),
+    salaire_moyen=('salary_in_usd', 'mean')
+).reset_index()
+
+carte_data['iso3'] = carte_data['company_location'].apply(convert_alpha2_to_alpha3)
+carte_data = carte_data.dropna(subset=['iso3'])
+
+fig_carte = px.choropleth(
+    carte_data,
+    locations='iso3',
+    locationmode='ISO-3',
+    color='offres',
+    hover_name='company_location',
+    color_continuous_scale='Viridis',
+    title="Nombre d'offres par pays"
+)
+st.plotly_chart(fig_carte, use_container_width=True)
+
+# Prédicteur de salaire
+st.subheader("🤖 Estimation de salaire")
+st.caption("📌 Estimation basée sur les données historiques 2020-2022. Les salaires réels peuvent varier.")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    poste_choix = st.selectbox("Poste", sorted(df['job_title'].unique()))
+
+with col2:
+    exp_choix_pred = st.selectbox("Niveau d'expérience", 
+    ['Junior (EN)', 'Mid-level (MI)', 'Senior (SE)', 'Executive (EX)'])
+
+with col3:
+    pays_choix = st.selectbox("Pays", sorted(df['company_location'].unique()))
+
+exp_map = {'Junior (EN)': 'EN', 'Mid-level (MI)': 'MI', 'Senior (SE)': 'SE', 'Executive (EX)': 'EX'}
+exp_code = exp_map[exp_choix_pred]
+
+filtre = df[
+    (df['job_title'] == poste_choix) & 
+    (df['experience_level'] == exp_code) & 
+    (df['company_location'] == pays_choix)
+]
+
+st.markdown("---")
+
+if len(filtre) > 0:
+    salaire_pred = filtre['salary_in_usd'].mean()
+    st.success(f"💰 Salaire estimé : **${salaire_pred:,.0f} / an**")
+    st.info(f"Basé sur {len(filtre)} offre(s) similaire(s)")
+else:
+    salaire_global = df[df['job_title'] == poste_choix]['salary_in_usd'].mean()
+    if not pd.isna(salaire_global):
+        nb_offres = len(df[df['job_title'] == poste_choix])
+        st.success(f"💰 Salaire estimé : **${salaire_global:,.0f} / an**")
+        st.info(f"Basé sur {nb_offres} offre(s) similaire(s) dans le monde")
+    else:
+        st.error("❌ Aucune donnée disponible pour cette combinaison.")
 # Tableau des données
 st.subheader("📋 Données brutes")
 if st.checkbox("📋 Cliquez ici pour afficher les données brutes"):
