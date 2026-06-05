@@ -121,45 +121,80 @@ fig_carte = px.choropleth(
 )
 st.plotly_chart(fig_carte, use_container_width=True)
 
-# Prédicteur de salaire
-st.subheader("🤖 Estimation de salaire")
-st.caption("📌 Estimation basée sur les données historiques 2020-2022. Les salaires réels peuvent varier.")
+# Prédicteur de salaire avec Machine Learning
+st.subheader("🤖 Prédiction de salaire")
+st.caption("📌 Modèle Machine Learning entraîné sur les données 2020-2022. Plus l'année est lointaine, moins la prédiction est précise.")
 
-col1, col2, col3 = st.columns(3)
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import LabelEncoder
+
+# Préparation
+df_ml = df[['job_title', 'experience_level', 'company_location', 'work_year', 'salary_in_usd']].dropna().copy()
+
+le_job = LabelEncoder()
+le_exp = LabelEncoder()
+le_loc = LabelEncoder()
+
+df_ml['job_encoded'] = le_job.fit_transform(df_ml['job_title'])
+df_ml['exp_encoded'] = le_exp.fit_transform(df_ml['experience_level'])
+df_ml['loc_encoded'] = le_loc.fit_transform(df_ml['company_location'])
+
+X = df_ml[['job_encoded', 'exp_encoded', 'loc_encoded', 'work_year']]
+y = df_ml['salary_in_usd']
+
+from sklearn.linear_model import LinearRegression
+model = LinearRegression()
+model.fit(X, y)
+
+# Interface
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     poste_choix = st.selectbox("Poste", sorted(df['job_title'].unique()))
-
 with col2:
-    exp_choix_pred = st.selectbox("Niveau d'expérience", 
-    ['Junior (EN)', 'Mid-level (MI)', 'Senior (SE)', 'Executive (EX)'])
-
+    exp_choix_pred = st.selectbox("Niveau", ['Junior (EN)', 'Mid-level (MI)', 'Senior (SE)', 'Executive (EX)'])
 with col3:
     pays_choix = st.selectbox("Pays", sorted(df['company_location'].unique()))
+with col4:
+    annee_pred = st.selectbox("Année de prédiction", list(range(2020, 2031)))
 
 exp_map = {'Junior (EN)': 'EN', 'Mid-level (MI)': 'MI', 'Senior (SE)': 'SE', 'Executive (EX)': 'EX'}
 exp_code = exp_map[exp_choix_pred]
 
-filtre = df[
-    (df['job_title'] == poste_choix) & 
-    (df['experience_level'] == exp_code) & 
-    (df['company_location'] == pays_choix)
-]
-
 st.markdown("---")
 
-if len(filtre) > 0:
-    salaire_pred = filtre['salary_in_usd'].mean()
-    st.success(f"💰 Salaire estimé : **${salaire_pred:,.0f} / an**")
-    st.info(f"Basé sur {len(filtre)} offre(s) similaire(s)")
-else:
-    salaire_global = df[df['job_title'] == poste_choix]['salary_in_usd'].mean()
-    if not pd.isna(salaire_global):
-        nb_offres = len(df[df['job_title'] == poste_choix])
-        st.success(f"💰 Salaire estimé : **${salaire_global:,.0f} / an**")
-        st.info(f"Basé sur {nb_offres} offre(s) similaire(s) dans le monde")
+try:
+    job_enc = le_job.transform([poste_choix])[0]
+    exp_enc = le_exp.transform([exp_code])[0]
+    loc_enc = le_loc.transform([pays_choix])[0]
+
+    if annee_pred <= 2022:
+        # Afficher les vraies données
+        filtre_reel = df_ml[
+            (df_ml['job_title'] == poste_choix) &
+            (df_ml['experience_level'] == exp_code) &
+            (df_ml['company_location'] == pays_choix) &
+            (df_ml['work_year'] == annee_pred)
+        ]
+        if len(filtre_reel) > 0:
+            salaire_reel = filtre_reel['salary_in_usd'].mean()
+            st.success(f"💰 Salaire réel {annee_pred} : **${salaire_reel:,.0f} / an**")
+            st.info(f"✅ Données réelles — basé sur {len(filtre_reel)} offre(s).")
+        else:
+            st.warning(f"⚠️ Pas de données réelles pour cette combinaison en {annee_pred}.")
     else:
-        st.error("❌ Aucune donnée disponible pour cette combinaison.")
+        # Prédiction ML pour 2023-2030
+        salaire_predit = model.predict([[job_enc, exp_enc, loc_enc, annee_pred]])[0]
+        st.success(f"💰 Salaire prédit pour {annee_pred} : **${salaire_predit:,.0f} / an**")
+        if annee_pred <= 2024:
+            st.info("⚠️ Projection proche — assez fiable.")
+        elif annee_pred <= 2027:
+            st.warning("⚠️ Projection future — à prendre avec précaution.")
+        else:
+            st.warning("⚠️ Projection 2028-2030 — très approximative.")
+
+except:
+    st.error("❌ Combinaison non disponible dans les données.")
 
 # Comparaison Afrique vs Monde
 st.subheader("🌍 Afrique vs Monde")
