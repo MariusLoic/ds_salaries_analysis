@@ -55,6 +55,7 @@ col1.metric("Total offres", len(df))
 col2.metric("Salaire moyen", f"${df['salary_in_usd'].mean():,.0f}")
 col3.metric("Pays représentés", df['company_location'].nunique())
 
+
 # Graphique 1
 st.subheader("Top 10 pays qui recrutent le plus")
 top_pays = df['company_location'].value_counts().head(10)
@@ -138,7 +139,35 @@ fig_carte = px.choropleth(
 )
 st.plotly_chart(fig_carte, use_container_width=True)
 
-# Prédicteur de salaire avec Machine Learning
+
+
+# Comparaison Afrique vs Monde
+st.subheader(" Afrique vs Monde")
+
+pays_afrique = ['NG', 'EG', 'KE', 'ZA', 'TN', 'DZ', 'CM', 'GH', 'SN']
+
+sal_afrique = df[df['company_location'].isin(pays_afrique)]['salary_in_usd'].mean()
+sal_monde = df[~df['company_location'].isin(pays_afrique)]['salary_in_usd'].mean()
+
+col1, col2 = st.columns(2)
+col1.metric(" Salaire moyen Afrique", f"${sal_afrique:,.0f}" if not pd.isna(sal_afrique) else "Pas de données")
+col2.metric(" Salaire moyen Monde", f"${sal_monde:,.0f}")
+
+offres_afrique = len(df[df['company_location'].isin(pays_afrique)])
+offres_monde = len(df[~df['company_location'].isin(pays_afrique)])
+
+fig7, ax7 = plt.subplots()
+ax7.bar(['Afrique', 'Reste du Monde'], [offres_afrique, offres_monde], color=['#FF6B35', '#4ECDC4'])
+ax7.set_ylabel("Nombre d'offres")
+ax7.set_title("Nombre d'offres : Afrique vs Monde")
+st.pyplot(fig7)
+
+# Tableau des données
+st.subheader(" Données brutes")
+if st.checkbox("📋 Cliquez ici pour afficher les données brutes"):
+   st.dataframe(df.reset_index(drop=True), height="content")
+
+   # Prédicteur de salaire avec Machine Learning
 st.subheader(" Prédiction de salaire")
 st.caption(" Modèle Machine Learning entraîné sur les données 2020-2022. Plus l'année est lointaine, moins la prédiction est précise.")
 
@@ -213,29 +242,57 @@ try:
 except:
     st.error("❌ Combinaison non disponible dans les données.")
 
-# Comparaison Afrique vs Monde
-st.subheader(" Afrique vs Monde")
 
-pays_afrique = ['NG', 'EG', 'KE', 'ZA', 'TN', 'DZ', 'CM', 'GH', 'SN']
+# ============================================
+# CHATBOT IA (Gemini)
+# ============================================
+import requests
+import json
 
-sal_afrique = df[df['company_location'].isin(pays_afrique)]['salary_in_usd'].mean()
-sal_monde = df[~df['company_location'].isin(pays_afrique)]['salary_in_usd'].mean()
+st.markdown("---")
+st.subheader("🤖 Chatbot - Pose une question sur les données")
 
-col1, col2 = st.columns(2)
-col1.metric(" Salaire moyen Afrique", f"${sal_afrique:,.0f}" if not pd.isna(sal_afrique) else "Pas de données")
-col2.metric(" Salaire moyen Monde", f"${sal_monde:,.0f}")
+GEMINI_API_KEY = "AQ.Ab8RN6IsQrvFoTAe9QLFnL6Rp42YZL3ZyD9m-gLyBOj054334g"
 
-offres_afrique = len(df[df['company_location'].isin(pays_afrique)])
-offres_monde = len(df[~df['company_location'].isin(pays_afrique)])
+# Contexte des données pour le chatbot
+contexte = f"""
+Tu es un assistant expert en Data Science. Tu analyses ce dataset de salaires.
+Voici les statistiques clés :
+- Nombre total d'offres : {len(df)}
+- Salaire moyen : ${df['salary_in_usd'].mean():,.0f}
+- Pays qui recrute le plus : {df['company_location'].value_counts().index[0]}
+- Poste le mieux payé : {df.groupby('job_title')['salary_in_usd'].mean().idxmax()}
+- Salaire maximum : ${df['salary_in_usd'].max():,.0f}
+- Années disponibles : {sorted(df['work_year'].unique().tolist())}
+Réponds toujours en français et de manière concise.
+"""
 
-fig7, ax7 = plt.subplots()
-ax7.bar(['Afrique', 'Reste du Monde'], [offres_afrique, offres_monde], color=['#FF6B35', '#4ECDC4'])
-ax7.set_ylabel("Nombre d'offres")
-ax7.set_title("Nombre d'offres : Afrique vs Monde")
-st.pyplot(fig7)
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-# Tableau des données
-st.subheader(" Données brutes")
-if st.checkbox("📋 Cliquez ici pour afficher les données brutes"):
-   st.dataframe(df.reset_index(drop=True), height="content")
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
+if prompt := st.chat_input("Pose ta question ici..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    with st.chat_message("assistant"):
+        models_to_try = [
+            "gemini-2.5-flash",
+            "gemini-2.0-flash-lite",
+            "gemini-2.0-flash"
+        ]
+        reply = "⏳ Tous les modèles sont temporairement surchargés. Réessaie dans quelques minutes."
+        for model in models_to_try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
+            payload = {"contents": [{"parts": [{"text": contexte + "\n\nQuestion: " + prompt}]}]}
+            response = requests.post(url, json=payload)
+            data = response.json()
+            if "candidates" in data:
+                reply = data["candidates"][0]["content"]["parts"][0]["text"]
+                reply = reply.replace("**", "").replace("*", "").replace("`", "")
+                break
+        st.markdown(reply)
+        st.session_state.messages.append({"role": "assistant", "content": reply})
