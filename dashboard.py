@@ -256,17 +256,28 @@ GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 
 # Contexte des données pour le chatbot
 contexte = f"""
-Tu es un assistant expert en Data Science. Tu analyses ce dataset de salaires.
-Voici les statistiques clés :
+Tu es un assistant expert en Data Science et carrière tech. Tu peux répondre à deux types de questions :
+
+1. QUESTIONS SUR LE DATASET (utilise ces données) :
 - Nombre total d'offres : {len(df)}
 - Salaire moyen : ${df['salary_in_usd'].mean():,.0f}
 - Pays qui recrute le plus : {df['company_location'].value_counts().index[0]}
 - Poste le mieux payé : {df.groupby('job_title')['salary_in_usd'].mean().idxmax()}
 - Salaire maximum : ${df['salary_in_usd'].max():,.0f}
 - Années disponibles : {sorted(df['work_year'].unique().tolist())}
-Réponds toujours en français et de manière concise.
-"""
+- Top 3 postes : {list(df['job_title'].value_counts().head(3).index)}
 
+2. QUESTIONS GÉNÉRALES (utilise tes connaissances) :
+- Conseils carrière Data Science
+- Différence entre Data Analyst, Data Scientist, Data Engineer
+- Compétences à apprendre
+- Comment préparer un entretien Data
+- Outils et technologies Data
+- Certifications recommandées
+- Salaires dans différents pays
+
+Réponds toujours en français, de manière concise et utile.
+"""
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
