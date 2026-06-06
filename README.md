@@ -97,3 +97,8 @@ Le script produit **5 graphiques**  :
 - GitHub : [MariusLoic](https://github.com/MariusLoic)
 - Certifications : Data Engineering Associate | Data Analyst Associate
 - ngninmeum@gmail.com
+
+
+##  Dashboard en ligne
+
+ [Voir le dashboard](https://dssalariesanalysis-analytics.streamlit.app/)
