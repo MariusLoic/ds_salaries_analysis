@@ -252,7 +252,7 @@ import json
 st.markdown("---")
 st.subheader("🤖 Chatbot - Pose une question sur les données")
 
-GEMINI_API_KEY = "AQ.Ab8RN6IsQrvFoTAe9QLFnL6Rp42YZL3ZyD9m-gLyBOj054334g"
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 
 # Contexte des données pour le chatbot
 contexte = f"""
